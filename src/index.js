@@ -1,34 +1,40 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
-const initialUrl = 'https://thecodinglove.com/postponing-the-deadline';
+const initialUrl = 'https://thecodinglove.com/page/1?s=';
 const settings = require('electron-settings');
+const pageUrl = 'https://thecodinglove.com/page/';
 
 let nextUrl = initialUrl;
+
+console.log("hello");
 
 function getTime() {
   return settings.get('time', 30 * 1000)
 }
 
 function reload() {
+  console.log("reaload");
   axios.get(nextUrl)
     .then((response) => {
+      let random = Math.floor(Math.random() * Math.floor(8));
       const $ = cheerio.load(response.data);
-    
-      let image = $('.blog-post-content object').attr('data');
+      let randomEl = $('.blog-post:not(.results-return)')[random];
+      let image = $(randomEl).children('.blog-post-content').children().children().children('object').attr('data');
       if (!image) {
-        image = $('.blog-post-content img').attr('src');
+        image = $(randomEl).children('.blog-post-content').children().children().children('img').attr('src');
       }
-    
+
       document.querySelector('#image').src = image;
-      document.querySelector('#text').innerHTML = new Option($('.blog-post-title').text()).innerHTML;
-      document.querySelector('#author').innerHTML = new Option($('.post-meta-info b').text()).innerHTML;
-      nextUrl = $('i.fa-random').parent().attr('href');
+      document.querySelector('#text').innerHTML = $(randomEl).children('.blog-post-title').text();
+
+      random = Math.floor(Math.random() * Math.floor(50)) + 1;
+
+      nextUrl = pageUrl + random + '?s=';
     })
     .catch((error) => {
       console.log(error);
       reject(error);
     });
-  console.log(getTime())
   setTimeout(reload, getTime())
 }
 
